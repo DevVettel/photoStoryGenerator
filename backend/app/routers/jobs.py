@@ -77,6 +77,26 @@ def get_job(job_id: str):
     finally:
         db.close()
 
+@router.get("/jobs", response_model=list[JobResponse])
+def list_jobs():
+    db = SessionLocal()
+    try:
+        jobs = db.query(Job).order_by(Job.created_at.desc()).all()
+        return [
+            JobResponse(
+                id=job.id,
+                topic=job.topic,
+                language=job.language,
+                status=job.status,
+                current_step=job.current_step,
+                result_text=job.result_text,
+                error_msg=job.error_msg,
+            )
+            for job in jobs
+        ]
+    finally:
+        db.close()
+
 
 @router.get("/jobs/{job_id}/stream")
 async def stream_job(job_id: str):

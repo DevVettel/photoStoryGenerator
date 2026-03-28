@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +15,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function TopicForm() {
+  const router = useRouter();
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState<string>("tr");
-  const [jobId, setJobId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +26,6 @@ export default function TopicForm() {
 
     setLoading(true);
     setError(null);
-    setJobId(null);
 
     try {
       const res = await fetch("http://localhost:8000/api/jobs", {
@@ -37,9 +37,9 @@ export default function TopicForm() {
       if (!res.ok) throw new Error("Sunucu hatası");
 
       const data = await res.json();
-      setJobId(data.job_id);
+      router.push(`/jobs/${data.id}`);
     } catch (err) {
-      setError("Backend'e bağlanılamadı. Kişi A'nın API'si hazır olunca çalışacak.");
+      setError("Backend'e bağlanılamadı. Sunucunun çalıştığından emin ol.");
     } finally {
       setLoading(false);
     }
@@ -77,12 +77,6 @@ export default function TopicForm() {
         <Button onClick={handleSubmit} disabled={loading || !topic.trim()}>
           {loading ? "Gönderiliyor..." : "Video Üret"}
         </Button>
-
-        {jobId && (
-          <p className="text-sm text-green-600">
-            ✅ Job oluşturuldu! ID: <span className="font-mono">{jobId}</span>
-          </p>
-        )}
 
         {error && (
           <p className="text-sm text-red-500">⚠️ {error}</p>

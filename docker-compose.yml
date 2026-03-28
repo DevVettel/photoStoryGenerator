@@ -5,8 +5,11 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - outputs_data:/app/outputs
     env_file:
       - ./backend/.env
+    environment:
+      - OUTPUT_DIR=/app/outputs
     depends_on:
       - redis
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -15,8 +18,11 @@ services:
     build: ./backend
     volumes:
       - ./backend:/app
+      - outputs_data:/app/outputs
     env_file:
       - ./backend/.env
+    environment:
+      - OUTPUT_DIR=/app/outputs
     depends_on:
       - redis
     command: celery -A app.workers.tasks worker --loglevel=info --concurrency=2
@@ -25,3 +31,6 @@ services:
     image: redis:7-alpine
     ports:
       - "6380:6379"
+
+volumes:
+  outputs_data:

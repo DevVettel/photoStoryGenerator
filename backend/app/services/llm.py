@@ -1,25 +1,12 @@
 import os
-import httpx
 from groq import Groq
 from dotenv import load_dotenv
 
-# .env dosyasındaki GROQ_API_KEY ve diğer değişkenleri yükler
 load_dotenv()
 
-# Manuel testte çalışan bağlantı yapısını buraya kuruyoruz
-# verify=False: SSL sertifika hatalarını atlayarak bağlantıyı zorlar
-custom_client = httpx.Client(
-    verify=False,
-    timeout=60.0,
-    trust_env=True
-)
-
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY"),
-    http_client=custom_client
-)
-
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+# Güvenli client başlatma
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 STORY_PROMPT_TR = """Sen bir YouTube içerik yazarısın. Aşağıdaki konu için ilgi çekici, 
 bilgilendirici ve akıcı bir video senaryosu yaz. Senaryo 300-400 kelime olsun, 

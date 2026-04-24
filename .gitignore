@@ -29,6 +29,8 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/ 
-"*.mp3" 
-"*.png" 
-"job_output/" 
+*.mp3
+*.png
+job_output/
+outputs/
+images/

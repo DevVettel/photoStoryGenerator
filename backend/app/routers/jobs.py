@@ -152,6 +152,10 @@ def get_job_files(job_id: str):
             for f in image_files
         ]
 
+    video_path = os.path.join(job_dir, "video.mp4")
+    if os.path.exists(video_path):
+        files["video"] = f"/api/jobs/{job_id}/download/video"
+
     return files
 
 
@@ -166,6 +170,12 @@ def download_file(job_id: str, file_type: str):
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Audio not found")
         return FileResponse(path, media_type="audio/mpeg", filename="audio.mp3")
+
+    if file_type == "video":
+        path = os.path.join(OUTPUT_DIR, job_id, "video.mp4")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail="Video not found")
+        return FileResponse(path, media_type="video/mp4", filename="video.mp4")
 
     raise HTTPException(status_code=400, detail="Invalid file type")
 

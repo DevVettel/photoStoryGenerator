@@ -30,6 +30,7 @@ Thumbs.db
 .idea/
 .claude/ 
 *.mp3
+*.mp4
 *.png
 job_output/
 outputs/

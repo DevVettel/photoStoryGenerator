@@ -1,23 +1,17 @@
-"use client";
-
 import type { Metadata } from "next";
 import "./globals.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import Providers from "./providers";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [queryClient] = useState(() => new QueryClient());
+export const metadata: Metadata = {
+  title: "PhotoStory — AI Video Generator",
+  description: "Turn any topic into a cinematic YouTube video with AI",
+};
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
       <body>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

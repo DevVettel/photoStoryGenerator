@@ -2,6 +2,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -27,6 +28,9 @@ async function fetchFiles(id: string) {
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
 
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
   const { data: job, isLoading, isError } = useQuery({
     queryKey: ["job", id],
     queryFn: () => fetchJob(id),
@@ -40,6 +44,28 @@ export default function JobDetailPage() {
     enabled: job?.status === "completed",
   });
 
+  const isCompleted = job?.status === "completed";
+  const isFailed = job?.status === "failed";
+  const currentStepIndex = STEPS.findIndex(s => s.key === job?.current_step);
+
+  useEffect(() => {
+    if (job?.result_text && isCompleted && !isTyping && displayedText === "") {
+      setIsTyping(true);
+      let i = 0;
+      const text = job.result_text;
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          setDisplayedText(text.slice(0, i + 1));
+          i++;
+        } else {
+          clearInterval(interval);
+          setIsTyping(false);
+        }
+      }, 8);
+      return () => clearInterval(interval);
+    }
+  }, [job?.result_text, isCompleted]);
+
   if (isLoading) return (
     <main style={mainStyle}>
       <div style={{ color: "var(--text-secondary)", fontSize: "15px" }}>Yükleniyor...</div>
@@ -51,10 +77,6 @@ export default function JobDetailPage() {
       <div style={{ color: "var(--error)" }}>Job bulunamadı.</div>
     </main>
   );
-
-  const isCompleted = job?.status === "completed";
-  const isFailed = job?.status === "failed";
-  const currentStepIndex = STEPS.findIndex(s => s.key === job?.current_step);
 
   return (
     <main style={mainStyle}>
@@ -70,7 +92,12 @@ export default function JobDetailPage() {
           textDecoration: "none",
           marginBottom: "2rem",
           transition: "color 0.15s",
-        }}>← Geri dön</Link>
+          lineHeight: "24px",
+          verticalAlign: "middle",
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", lineHeight: "1", fontSize: "13px" }}>←</span>
+          <span style={{ lineHeight: "1" }}>Geri dön</span>
+        </Link>
 
         {/* Başlık */}
         <div style={{ marginBottom: "2rem" }}>
@@ -97,35 +124,58 @@ export default function JobDetailPage() {
             marginBottom: "1.5rem",
           }}>
             <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Pipeline</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {STEPS.map((step, i) => {
                 const isDone = currentStepIndex > i || isCompleted;
                 const isActive = job?.current_step === step.key;
+                const isPending = !isDone && !isActive;
                 return (
-                  <div key={step.key} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      background: isDone ? "var(--success)" : isActive ? "var(--accent)" : "var(--bg-secondary)",
-                      color: isDone || isActive ? "#000" : "var(--text-muted)",
-                      border: isActive ? "none" : "1px solid var(--border)",
-                      flexShrink: 0,
-                      animation: isActive ? "pulse 1.5s infinite" : "none",
-                    }}>
-                      {isDone ? "✓" : i + 1}
+                  <div key={step.key}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: isActive ? "10px" : "0" }}>
+                      <div style={{
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        background: isDone ? "var(--success)" : isActive ? "var(--accent)" : "var(--bg-secondary)",
+                        color: isDone || isActive ? "#000" : "var(--text-muted)",
+                        border: isActive ? "none" : "1px solid var(--border)",
+                        flexShrink: 0,
+                      }}>
+                        {isDone ? "✓" : i + 1}
+                      </div>
+                      <span style={{
+                        fontSize: "14px",
+                        color: isActive ? "var(--text-primary)" : isDone ? "var(--text-secondary)" : "var(--text-muted)",
+                        fontWeight: isActive ? "500" : "400",
+                        flex: 1,
+                      }}>{step.label}</span>
+                      {isActive && (
+                        <span style={{ fontSize: "11px", color: "var(--accent)" }}>devam ediyor...</span>
+                      )}
                     </div>
-                    <span style={{
-                      fontSize: "14px",
-                      color: isActive ? "var(--text-primary)" : isDone ? "var(--text-secondary)" : "var(--text-muted)",
-                      fontWeight: isActive ? "500" : "400",
-                    }}>{step.label}</span>
-                    {isActive && <span style={{ fontSize: "11px", color: "var(--accent)", marginLeft: "auto" }}>devam ediyor...</span>}
+
+                    {/* Aktif adım için progress bar */}
+                    {isActive && (
+                      <div style={{
+                        marginLeft: "36px",
+                        height: "3px",
+                        background: "var(--bg-secondary)",
+                        borderRadius: "2px",
+                        overflow: "hidden",
+                      }}>
+                        <div style={{
+                          height: "100%",
+                          background: "var(--accent)",
+                          borderRadius: "2px",
+                          animation: "progressBar 2s ease-in-out infinite",
+                        }} />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -148,6 +198,26 @@ export default function JobDetailPage() {
           </div>
         )}
 
+        {/* Video skeleton */}
+        {!isCompleted && !isFailed && (
+          <div style={{ marginBottom: "1.5rem" }}>
+            <SectionLabel>Video</SectionLabel>
+            <div style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "16px",
+              overflow: "hidden",
+            }}>
+              <div style={{
+                width: "100%",
+                aspectRatio: "16/9",
+                background: "var(--bg-secondary)",
+                animation: "shimmer 1.5s ease-in-out infinite",
+              }} />
+            </div>
+          </div>
+        )}
+
         {/* Video player */}
         {files?.video && (
           <div style={{ marginBottom: "1.5rem" }}>
@@ -158,26 +228,52 @@ export default function JobDetailPage() {
               borderRadius: "16px",
               overflow: "hidden",
             }}>
-              <video controls style={{ width: "100%", display: "block" }}>
-                <source src={`${API_URL}${files.video}`} type="video/mp4" />
-              </video>
-              <div style={{ padding: "1rem", borderTop: "1px solid var(--border)" }}>
+              <video
+                controls
+                preload="metadata"
+                style={{ width: "100%", display: "block" }}
+                src={`${API_URL}${files.video}`}
+              />
+              <div style={{ padding: "1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "10px", justifyContent: "space-between" }}>
                 <a
                   href={`${API_URL}${files.video}`}
-                  download="video.mp4"
+                  download="photostory-video.mp4"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
+                    gap: "8px",
+                    padding: "12px 24px",
+                    borderRadius: "10px",
                     background: "var(--accent)",
                     color: "#000",
-                    fontSize: "13px",
+                    fontSize: "14px",
                     fontWeight: "600",
                     textDecoration: "none",
+                    fontFamily: "var(--font-display)",
                   }}
-                >↓ İndir</a>
+                >
+                  ↓ İndir
+                </a>
+                <a
+                  href="https://www.youtube.com/upload"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "12px 24px",
+                    borderRadius: "10px",
+                    background: "#FF0000",
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-display)",
+                  }}
+                >
+                  ▶ YouTube'da Paylaş
+                </a>
               </div>
             </div>
           </div>
@@ -193,9 +289,31 @@ export default function JobDetailPage() {
               borderRadius: "16px",
               padding: "1rem 1.25rem",
             }}>
-              <audio controls style={{ width: "100%" }}>
-                <source src={`${API_URL}${files.audio}`} type="audio/mpeg" />
-              </audio>
+              <audio
+                controls
+                preload="metadata"
+                style={{ width: "100%" }}
+                src={`${API_URL}${files.audio}`}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Görseller skeleton */}
+        {!isCompleted && !isFailed && (
+          <div style={{ marginBottom: "1.5rem" }}>
+            <SectionLabel>Görseller</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{
+                  width: "100%",
+                  aspectRatio: "16/9",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "10px",
+                  animation: "shimmer 1.5s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                }} />
+              ))}
             </div>
           </div>
         )}
@@ -241,7 +359,7 @@ export default function JobDetailPage() {
               lineHeight: "1.8",
               whiteSpace: "pre-wrap",
             }}>
-              {job.result_text}
+              {displayedText || job.result_text}
             </div>
           </div>
         )}
@@ -251,6 +369,15 @@ export default function JobDetailPage() {
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        @keyframes progressBar {
+          0% { width: 0%; margin-left: 0; }
+          50% { width: 60%; margin-left: 20%; }
+          100% { width: 0%; margin-left: 100%; }
+        }
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
         }
       `}</style>
     </main>

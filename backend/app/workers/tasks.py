@@ -43,7 +43,7 @@ def generate_story_task(self, job_id: str, topic: str, language: str):
 
         _update_job(db, job_id, result_text=story)
 
-        return {"job_id": job_id, "story": story, "topic": topic}
+        return {"job_id": job_id, "story": story, "topic": topic, "language": language}
 
     except Exception as e:
         _update_job(db, job_id, status="failed", error_msg=str(e))
@@ -57,6 +57,7 @@ def generate_audio_task(self, prev_result: dict):
     job_id = prev_result["job_id"]
     story = prev_result["story"]
     topic = prev_result["topic"]
+    language = prev_result.get("language", "tr")
 
     db = SessionLocal()
     try:
@@ -66,7 +67,7 @@ def generate_audio_task(self, prev_result: dict):
         os.makedirs(job_dir, exist_ok=True)
         audio_path = os.path.join(job_dir, "audio.mp3")
 
-        generate_audio(text=story, output_path=audio_path)
+        generate_audio(text=story, output_path=audio_path, language=language)
 
         return {
             "job_id": job_id,

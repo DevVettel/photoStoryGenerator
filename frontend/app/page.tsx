@@ -9,6 +9,7 @@ export default function Home() {
   const [language, setLanguage] = useState("tr");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [skipImages, setSkipImages] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async () => {
@@ -19,7 +20,7 @@ export default function Home() {
       const res = await fetch(`${API_URL}/api/jobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, language }),
+        body: JSON.stringify({ topic, language, skip_images: skipImages }),
       });
       if (!res.ok) throw new Error("İstek başarısız");
       const data = await res.json();
@@ -181,6 +182,38 @@ export default function Home() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Test modu toggle */}
+        <div style={{ marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-secondary)" }}>Test modu</span>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>Görsel üretimini atlar, kredi harcamaz</p>
+          </div>
+          <button
+            onClick={() => setSkipImages(!skipImages)}
+            style={{
+              width: "44px",
+              height: "24px",
+              borderRadius: "12px",
+              border: "none",
+              background: skipImages ? "var(--accent)" : "var(--text-muted)",
+              position: "relative",
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+          >
+            <div style={{
+              position: "absolute",
+              width: "18px",
+              height: "18px",
+              borderRadius: "50%",
+              background: "#fff",
+              top: "3px",
+              left: skipImages ? "23px" : "3px",
+              transition: "left 0.2s",
+            }} />
+          </button>
         </div>
 
         {/* Submit butonu */}

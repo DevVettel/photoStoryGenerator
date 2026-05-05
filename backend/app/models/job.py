@@ -27,6 +27,7 @@ class Job(Base):
     current_step = Column(String, nullable=True)
     result_text = Column(String, nullable=True)
     error_msg = Column(String, nullable=True)
+    skip_images = Column(String, default="false")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

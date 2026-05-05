@@ -83,6 +83,40 @@ def generate_audio_task(self, prev_result: dict):
         db.close()
 
 
+@celery_app.task(bind=True, name="skip_images_task")
+def skip_images_task(self, prev_result: dict):
+    """Görsel üretimini atlar, mevcut görselleri veya placeholder kullanır."""
+    import os
+    from PIL import Image, ImageDraw
+
+    job_id = prev_result["job_id"]
+    audio_path = prev_result["audio_path"]
+    story = prev_result.get("story", "")
+    topic = prev_result.get("topic", "")
+
+    job_dir = os.path.join(OUTPUT_DIR, job_id)
+    images_dir = os.path.join(job_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    image_paths = []
+    colors = ["#1a1a2e", "#16213e", "#0f3460"]
+
+    for i in range(3):
+        output_path = os.path.join(images_dir, f"image_{i+1}.png")
+        img = Image.new("RGB", (1280, 720), color=colors[i])
+        draw = ImageDraw.Draw(img)
+        draw.text((640, 360), f"{topic} — Görsel {i+1}", fill="#ffffff", anchor="mm")
+        img.save(output_path, "PNG")
+        image_paths.append(output_path)
+
+    return {
+        "job_id": job_id,
+        "audio_path": audio_path,
+        "image_paths": image_paths,
+        "story": story,
+    }
+
+
 @celery_app.task(bind=True, name="generate_images_task")
 def generate_images_task(self, prev_result: dict):
     job_id = prev_result["job_id"]
@@ -109,6 +143,7 @@ def generate_images_task(self, prev_result: dict):
             "job_id": job_id,
             "audio_path": audio_path,
             "image_paths": image_paths,
+            "story": story,
         }
 
     except Exception as e:
@@ -131,10 +166,12 @@ def assemble_video_task(self, prev_result: dict):
         job_dir = os.path.join(OUTPUT_DIR, job_id)
         output_path = os.path.join(job_dir, "video.mp4")
 
+        story_text = prev_result.get("story", "")
         assemble_video(
             audio_path=audio_path,
             image_paths=image_paths,
             output_path=output_path,
+            story_text=story_text,
         )
 
         _update_job(db, job_id, status="completed", current_step=None)
@@ -151,11 +188,19 @@ def assemble_video_task(self, prev_result: dict):
         db.close()
 
 
-def start_pipeline(job_id: str, topic: str, language: str):
-    pipeline = chain(
-        generate_story_task.s(job_id=job_id, topic=topic, language=language),
-        generate_audio_task.s(),
-        generate_images_task.s(),
-        assemble_video_task.s(),
-    )
+def start_pipeline(job_id: str, topic: str, language: str, skip_images: bool = False):
+    if skip_images:
+        pipeline = chain(
+            generate_story_task.s(job_id=job_id, topic=topic, language=language),
+            generate_audio_task.s(),
+            skip_images_task.s(),
+            assemble_video_task.s(),
+        )
+    else:
+        pipeline = chain(
+            generate_story_task.s(job_id=job_id, topic=topic, language=language),
+            generate_audio_task.s(),
+            generate_images_task.s(),
+            assemble_video_task.s(),
+        )
     pipeline.delay()

@@ -14,6 +14,7 @@ init_db()
 class JobCreate(BaseModel):
     topic: str
     language: str = "tr"
+    skip_images: bool = False
 
 
 class JobResponse(BaseModel):
@@ -34,6 +35,7 @@ def create_job(payload: JobCreate):
             id=str(uuid.uuid4()),
             topic=payload.topic,
             language=payload.language,
+            skip_images=str(payload.skip_images).lower(),
         )
         db.add(job)
         db.commit()
@@ -43,6 +45,7 @@ def create_job(payload: JobCreate):
             job_id=job.id,
             topic=job.topic,
             language=job.language,
+            skip_images=payload.skip_images,
         )
 
         return JobResponse(

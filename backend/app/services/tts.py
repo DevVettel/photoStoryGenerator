@@ -29,16 +29,16 @@ def generate_audio(text: str, output_path: str, language: str = "tr") -> str:
                 "speed": 1.0,
             }
         },
-        timeout=30.0,
+        timeout=60.0,
     )
     response.raise_for_status()
     prediction = response.json()
     prediction_id = prediction["id"]
 
     poll_url = f"https://api.replicate.com/v1/predictions/{prediction_id}"
-    for _ in range(60):
+    for _ in range(80):
         time.sleep(3)
-        poll = httpx.get(poll_url, headers=headers, timeout=30.0)
+        poll = httpx.get(poll_url, headers=headers, timeout=60.0)
         poll.raise_for_status()
         result = poll.json()
 

@@ -15,13 +15,13 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/outputs")
 
 def test_video_assembly(job_id: str):
     from app.services.video import assemble_video
+    import json
 
     job_dir = os.path.join(OUTPUT_DIR, job_id)
     audio_path = os.path.join(job_dir, "audio.mp3")
     images_dir = os.path.join(job_dir, "images")
     output_path = os.path.join(job_dir, "video_test.mp4")
 
-    # Dosyaları kontrol et
     if not os.path.exists(audio_path):
         print(f"HATA: Ses dosyası bulunamadı: {audio_path}")
         sys.exit(1)
@@ -36,6 +36,9 @@ def test_video_assembly(job_id: str):
         print(f"HATA: Görsel bulunamadı: {images_dir}")
         sys.exit(1)
 
+    # Test için örnek story_text
+    story_text = "Merhaba ve hoş geldiniz. Bugün tarihin en önemli konularından birini ele alacağız. Bu konu hem ilginç hem de öğreticidir. İnsanlık tarihi boyunca bu gelişmeler yaşanmıştır. Sonuç olarak bu konuyu anlamak çok önemlidir."
+
     print(f"Ses: {audio_path}")
     print(f"Görseller: {image_paths}")
     print(f"Çıktı: {output_path}")
@@ -45,6 +48,7 @@ def test_video_assembly(job_id: str):
         audio_path=audio_path,
         image_paths=image_paths,
         output_path=output_path,
+        story_text=story_text,
     )
 
     size = os.path.getsize(result) / (1024 * 1024)

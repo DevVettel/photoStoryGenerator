@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🎬 PhotoStory
+# PhotoStory
 
-### AI-Powered YouTube Video Generator
+### AI-Powered Video Generator
 
 *Bir konu ver — senaryo, ses, görsel ve video otomatik üretilsin.*
 
@@ -18,93 +18,111 @@
 
 ---
 
-## 📖 Nedir?
+## Nedir?
 
-**PhotoStory**, bir konu girişinden başlayarak uçtan uca YouTube videosu üreten, tamamen API tabanlı bir AI pipeline sistemidir. Metin yazımından seslendirmeye, görsel üretimden video assembly'e kadar tüm süreç otomatik çalışır.
+**PhotoStory**, bir konu girişinden başlayarak uçtan uca video üreten, tamamen API tabanlı bir AI pipeline sistemidir. Metin üretiminden seslendir meye, görsel oluşturmadan video montajına kadar tüm süreç otomatik çalışır — yerel GPU veya model gerektirmez.
 
 ```
-Konu → Senaryo → Seslendirme → Görseller → Video
+Konu → Senaryo (Groq) → Ses (MiniMax) → Görseller (Flux) → Video (FFmpeg)
 ```
 
 ---
 
-## ✨ Özellikler
+## Özellikler
 
-- **Akıllı Senaryo Üretimi** — Groq üzerinde Llama 3.3 70B ile Türkçe/İngilizce video senaryosu
-- **Doğal Seslendirme** — ElevenLabs ile çok dilli neural TTS
-- **AI Görsel Üretimi** — HuggingFace üzerinden Stable Diffusion XL ile minimum 3 görsel
-- **Otomatik Video** — FFmpeg ile ses + görsel + geçiş efektleri → MP4
-- **Async Pipeline** — Celery + Redis ile uzun işlemler arka planda çalışır, UI bloklanmaz
-- **Real-time Takip** — SSE (Server-Sent Events) ile iş durumu anlık güncellenir
-- **Sıfır Local Model** — GPU gerekmez, tüm AI işlemleri API üzerinden
+- **Senaryo Üretimi** — Groq üzerinde Llama 3.3 70B ile Türkçe/İngilizce video senaryosu (300–400 kelime)
+- **Doğal Seslendirme** — Replicate üzerinden MiniMax Speech 2.8 HD ile yüksek kaliteli neural TTS
+- **AI Görsel Üretimi** — Replicate üzerinden Flux Schnell ile otomatik prompt mühendisliği + 3 adet 16:9 görsel
+- **Profesyonel Video Montajı** — FFmpeg ile Ken Burns efektleri, xfade geçişleri, otomatik SRT altyazılar → MP4
+- **Async Pipeline** — Celery + Redis ile uzun işlemler arka planda; UI bloklanmaz
+- **Gerçek Zamanlı Takip** — SSE (Server-Sent Events) ile iş durumu anlık akışı
+- **Test Modu** — Görsel üretimini atlayan ve placeholder kullanan `skip_images` seçeneği (API kredisi harcamaz)
+- **Sıfır Lokal Model** — Tüm AI işlemleri API üzerinden; GPU gerekmez
 
 ---
 
-## 🏗️ Mimari
+## Mimari
 
 ```
-┌─────────────────────────────────────────────┐
-│              Next.js Dashboard               │
-│     Konu gir · Job takip · Önizle · İndir   │
-└──────────────────┬──────────────────────────┘
-                   │ REST / SSE
-┌──────────────────▼──────────────────────────┐
-│                  FastAPI                     │
-│         REST endpoints · SSE stream          │
-└──────────┬───────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│             Next.js Dashboard              │
+│   Konu gir · Job takip · İndir · Önizle   │
+└─────────────────┬─────────────────────────┘
+                  │ REST / SSE
+┌─────────────────▼─────────────────────────┐
+│                 FastAPI                    │
+│        REST endpoints · SSE stream        │
+└──────────┬────────────────────────────────┘
            │ enqueue
-┌──────────▼──────────┐   ┌───────────────────┐
-│        Redis        │──▶│   Celery Worker   │
-│   Broker + cache    │   │  Async task chain │
-└─────────────────────┘   └────────┬──────────┘
-                                   │
-        ┌──────────────────────────▼──────────────────────────┐
-        │                   AI Pipeline                        │
-        │  ① Metin    ② Ses       ③ Görseller    ④ Video     │
-        │   Groq   → ElevenLabs → HuggingFace  →  FFmpeg     │
-        └──────────────────────────────────────────────────────┘
-                │ metadata                    │ files
-        ┌───────▼────────┐          ┌─────────▼──────────┐
-        │    SQLite      │          │       MinIO         │
-        │  Job metadata  │          │  audio/img/video    │
-        └────────────────┘          └────────────────────┘
+┌──────────▼──────────┐  ┌──────────────────────┐
+│        Redis        │─▶│    Celery Worker     │
+│  Broker + Backend   │  │   Async task chain   │
+└─────────────────────┘  └──────────┬───────────┘
+                                    │
+        ┌───────────────────────────▼──────────────────────────┐
+        │                    AI Pipeline                        │
+        │  ① Senaryo    ② Ses         ③ Görseller   ④ Video  │
+        │   Groq LLM → MiniMax TTS → Flux Schnell → FFmpeg    │
+        └───────────────────────────────────────────────────────┘
+                │ metadata                    │ dosyalar
+        ┌───────▼────────┐        ┌───────────▼──────────┐
+        │    SQLite      │        │   Docker Volume      │
+        │  Job metadata  │        │  audio / img / video │
+        └────────────────┘        └──────────────────────┘
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
-| Teknoloji | Açıklama |
-|---|---|
-| Next.js 14 (App Router) | SSR + API routes |
-| Tailwind CSS + shadcn/ui | UI bileşen kütüphanesi |
-| Zustand + React Query | State yönetimi + async veri |
+
+| Teknoloji | Versiyon | Açıklama |
+|---|---|---|
+| Next.js (App Router) | 14.2 | SSR + dosya tabanlı routing |
+| React | 18 | UI bileşenleri |
+| TypeScript | 5 | Tip güvenliği |
+| Tailwind CSS | 3.4 | Utility-first stil |
+| TanStack React Query | 5 | Async state yönetimi |
 
 ### Backend
-| Teknoloji | Açıklama |
-|---|---|
-| FastAPI | Async REST API + SSE |
-| Celery + Redis | Async job queue |
-| SQLAlchemy + Alembic | ORM + migration |
-| SQLite → PostgreSQL | Dev → prod veritabanı |
+
+| Teknoloji | Versiyon | Açıklama |
+|---|---|---|
+| FastAPI | 0.115 | Async REST API + SSE streaming |
+| Celery | 5.4 | Dağıtık task queue |
+| Redis | 7 | Broker + sonuç backend |
+| SQLAlchemy | 2.0 | ORM |
+| SQLite | — | Job metadata (geliştirme) |
+| Python | 3.12 | Runtime |
 
 ### AI Pipeline
-| Adım | Servis | Model |
+
+| Adım | Sağlayıcı | Model |
 |---|---|---|
-| Metin | Groq API | Llama 3.3 70B |
-| Ses | ElevenLabs | Multilingual v2 |
-| Görsel | HuggingFace | Stable Diffusion XL |
-| Video | FFmpeg | — |
+| Senaryo | Groq API | Llama 3.3 70B Versatile |
+| Ses | Replicate (MiniMax) | Speech 2.8 HD |
+| Görseller | Replicate (Black Forest Labs) | Flux Schnell |
+| Video montajı | FFmpeg | — |
 
 ---
 
-## 🚀 Kurulum
+## Video Montaj Detayları
+
+FFmpeg `filter_complex` zinciri ile tam otomatik video üretimi:
+
+- **Ken Burns efektleri** — zoom-in, zoom-out, pan-right, pan-left, pan-up (rotasyonlu)
+- **xfade geçişleri** — dissolve, fadeblack, smoothleft, smoothright, fade (rotasyonlu)
+- **Altyazılar** — Hikaye metni cümlelere ayrılır, eşit süre paylaştırılır, SRT olarak oluşturulur
+- **Çıktı** — H.264 (CRF 20) + AAC 192k, 25 FPS, 1280×720
+
+---
+
+## Kurulum
 
 ### Gereksinimler
 
 - Docker Desktop
-- Python 3.12+
 - Node.js 18+
 
 ### 1. Repo'yu klonla
@@ -120,19 +138,20 @@ cd photoStoryGenerator
 cp backend/.env.example backend/.env
 ```
 
-`.env` dosyasını düzenle:
+`backend/.env` dosyasını düzenle:
 
 ```env
-# Groq (ücretsiz) — https://console.groq.com
+# Groq — https://console.groq.com (ücretsiz tier mevcut)
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# ElevenLabs (ücretsiz tier) — https://elevenlabs.io
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
-ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB
+# Replicate — https://replicate.com (TTS + görsel üretimi)
+REPLICATE_API_TOKEN=your_replicate_api_token
 
-# HuggingFace (ücretsiz) — https://huggingface.co/settings/tokens
-HUGGINGFACE_API_KEY=your_hf_api_key
+# Altyapı (varsayılanlar Docker Compose ile çalışır)
+DATABASE_URL=sqlite:///./photostory.db
+REDIS_URL=redis://redis:6379/0
+OUTPUT_DIR=/app/outputs
 ```
 
 ### 3. Docker ile başlat
@@ -140,6 +159,11 @@ HUGGINGFACE_API_KEY=your_hf_api_key
 ```bash
 docker-compose up -d --build
 ```
+
+Servisler:
+- **API** → `http://localhost:8000`
+- **Frontend** → `http://localhost:3000`
+- **Redis** → `localhost:6380`
 
 ### 4. Sağlık kontrolü
 
@@ -150,14 +174,14 @@ curl http://localhost:8000/health
 
 ---
 
-## 📡 API Kullanımı
+## API Referansı
 
 ### Video üretimi başlat
 
 ```bash
 curl -X POST http://localhost:8000/api/jobs \
   -H "Content-Type: application/json" \
-  -d '{"topic": "Mars kolonisi", "language": "tr"}'
+  -d '{"topic": "Mars kolonisi", "language": "tr", "skip_images": false}'
 ```
 
 ```json
@@ -165,7 +189,8 @@ curl -X POST http://localhost:8000/api/jobs \
   "id": "9929bc60-c7ad-4667-af4b-a8426a4d9fc4",
   "topic": "Mars kolonisi",
   "language": "tr",
-  "status": "pending"
+  "status": "pending",
+  "current_step": null
 }
 ```
 
@@ -175,69 +200,104 @@ curl -X POST http://localhost:8000/api/jobs \
 curl http://localhost:8000/api/jobs/{job_id}
 ```
 
-```json
-{
-  "id": "9929bc60-...",
-  "status": "completed",
-  "current_step": null,
-  "result_text": "Merhaba arkadaşlar..."
-}
+### Gerçek zamanlı durum akışı (SSE)
+
+```bash
+curl -N http://localhost:8000/api/jobs/{job_id}/stream
 ```
 
-### Job durumları
+### Tüm işleri listele
+
+```bash
+curl http://localhost:8000/api/jobs
+```
+
+### Çıktı dosyalarını al
+
+```bash
+curl http://localhost:8000/api/jobs/{job_id}/files
+# → {"audio": "...", "images": [...], "video": "..."}
+```
+
+### Dosya indir
+
+```bash
+curl -O http://localhost:8000/api/jobs/{job_id}/download/video
+curl -O http://localhost:8000/api/jobs/{job_id}/download/audio
+```
+
+### İş durumları
 
 | Durum | Açıklama |
 |---|---|
 | `pending` | Kuyruğa alındı |
-| `running` | İşleniyor |
-| `completed` | Tamamlandı |
-| `failed` | Hata oluştu |
+| `running` (step: `text`) | Senaryo üretiliyor |
+| `running` (step: `audio`) | Seslendirme yapılıyor |
+| `running` (step: `images`) | Görseller oluşturuluyor |
+| `running` (step: `video`) | Video montajı yapılıyor |
+| `completed` | Tamamlandı, dosyalar hazır |
+| `failed` | Hata oluştu (`error_msg` dolu) |
 
 ---
 
-## 🗺️ Yol Haritası
-
-| Sprint | Kapsam | Durum |
-|---|---|---|
-| Sprint 1 | FastAPI + Celery + Groq metin üretimi | ✅ Tamamlandı |
-| Sprint 2 | ElevenLabs TTS + HuggingFace görsel üretimi | 🔄 Devam ediyor |
-| Sprint 3 | FFmpeg video assembly + MinIO storage | 📋 Planlandı |
-| Sprint 4 | Efekt katmanı + kalite iyileştirme | 📋 Planlandı |
-| Sprint 5 | Google Trends + otomatik pipeline | 📋 Planlandı |
-| Sprint 6 | YouTube otomatik upload + monitoring | 📋 Planlandı |
-
----
-
-## 📁 Proje Yapısı
+## Proje Yapısı
 
 ```
 photoStoryGenerator/
 ├── backend/
 │   ├── app/
-│   │   ├── routers/        # FastAPI route'ları
-│   │   ├── models/         # SQLAlchemy modelleri
-│   │   ├── services/       # LLM, TTS, görsel servisleri
-│   │   └── workers/        # Celery task chain
+│   │   ├── main.py             # FastAPI uygulama başlangıcı
+│   │   ├── routers/
+│   │   │   └── jobs.py         # Tüm job endpoint'leri
+│   │   ├── models/
+│   │   │   └── job.py          # SQLAlchemy Job modeli
+│   │   ├── services/
+│   │   │   ├── llm.py          # Groq senaryo üretimi
+│   │   │   ├── tts.py          # MiniMax TTS (Replicate)
+│   │   │   ├── image.py        # Flux Schnell görsel üretimi (Replicate)
+│   │   │   └── video.py        # FFmpeg montaj + Ken Burns + SRT
+│   │   └── workers/
+│   │       └── tasks.py        # Celery task chain tanımları
 │   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/               # Next.js dashboard (Sprint 2)
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── app/
+│   │   ├── page.tsx            # Ana form sayfası
+│   │   ├── layout.tsx          # Root layout
+│   │   └── jobs/
+│   │       ├── page.tsx        # Job listesi
+│   │       └── [id]/page.tsx   # Job detay ve izleme
+│   ├── package.json
+│   └── .env.local
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## 🤝 Katkı
+## Geliştirme
 
-1. Fork et
-2. Feature branch oluştur (`git checkout -b feature/sprint2-tts`)
-3. Commit et (`git commit -m 'feat: ElevenLabs TTS entegrasyonu'`)
-4. Push et (`git push origin feature/sprint2-tts`)
-5. Pull Request aç
+### Worker'ı yeniden başlat
+
+```bash
+docker-compose up -d --force-recreate worker
+```
+
+### Logları izle
+
+```bash
+docker-compose logs -f worker
+docker-compose logs -f api
+```
+
+### Test modu
+
+Frontend'deki **Test modu** toggle'ı `skip_images: true` parametresini gönderir. Görsel üretimini atlayıp PIL ile placeholder görsel oluşturur — Replicate kredisi harcamadan tüm pipeline'ı test etmeye yarar.
 
 ---
 
-## 📄 Lisans
+## Lisans
 
 MIT License — detaylar için [LICENSE](LICENSE) dosyasına bak.
 
@@ -245,6 +305,6 @@ MIT License — detaylar için [LICENSE](LICENSE) dosyasına bak.
 
 <div align="center">
 
-Made with 💙 by **DevVettel** and **okantao**
+Made by **DevVettel** and **okantao**
 
 </div>

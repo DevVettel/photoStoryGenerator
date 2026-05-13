@@ -117,7 +117,7 @@ export default function Home() {
       }}>
         {/* Konu input */}
         <div style={{ marginBottom: "1.25rem" }}>
-          <label style={{
+          <label htmlFor="topic-input" style={{
             display: "block",
             fontSize: "12px",
             fontWeight: "500",
@@ -127,6 +127,7 @@ export default function Home() {
             marginBottom: "8px",
           }}>Konu</label>
           <input
+            id="topic-input"
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -151,7 +152,7 @@ export default function Home() {
 
         {/* Dil seçimi */}
         <div style={{ marginBottom: "1.75rem" }}>
-          <label style={{
+          <p style={{
             display: "block",
             fontSize: "12px",
             fontWeight: "500",
@@ -159,7 +160,7 @@ export default function Home() {
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             marginBottom: "8px",
-          }}>Dil</label>
+          }}>Dil</p>
           <div style={{ display: "flex", gap: "8px" }}>
             {[{ value: "tr", label: "Türkçe" }, { value: "en", label: "English" }].map((lang) => (
               <button

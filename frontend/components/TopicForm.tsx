@@ -38,7 +38,7 @@ export default function TopicForm() {
 
       const data = await res.json();
       router.push(`/jobs/${data.id}`);
-    } catch (err) {
+    } catch {
       setError("Backend'e bağlanılamadı. Sunucunun çalıştığından emin ol.");
     } finally {
       setLoading(false);

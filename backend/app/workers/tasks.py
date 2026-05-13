@@ -18,7 +18,7 @@ celery_app.conf.update(
     timezone="Europe/Istanbul",
 )
 
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/tmp/photostory")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/outputs")
 
 
 def _get_job(db, job_id):

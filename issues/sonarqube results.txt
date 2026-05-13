@@ -1,0 +1,828 @@
+backend/app/routers/jobs.py
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L138
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L144
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L148
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L150
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L159
+30min effort
+13 days ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L173
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Intentionality
+Security
+
+
+1
+Blocker
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L175
+30min effort
+1 month ago
+Vulnerability
+Blocker
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L179
+30min effort
+13 days ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Intentionality
+Security
+
+
+1
+Blocker
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L181
+30min effort
+13 days ago
+Vulnerability
+Blocker
+
+
+Change this code to not construct the path from user-controlled data.
+
+Responsibility
+Security
+
+
+2
+Medium
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L193
+30min effort
+1 month ago
+Vulnerability
+Major
+
+
+Change this code to not construct the path from user-controlled data.
+
+Intentionality
+Security
+
+
+1
+Blocker
+cwe
++
+Open
+Enes Öztürk
+Enes Öztürk
+L195
+30min effort
+1 month ago
+Vulnerability
+Blocker
+backend/app/workers/tasks.py
+
+
+Make sure publicly writable directories are used safely here.
+
+Intentionality
+Security
+
+
+4
+High
+cwe
+former-hotspot
++
+Open
+Enes Öztürk
+Enes Öztürk
+
+
+
+
+
+
+
+--------------------------------------------------------
+
+
+frontend/app/jobs/[id]/page.tsx
+
+
+Media elements such as <audio> and <video> must have a <track> for captions.
+
+Consistency
+Reliability
+
+
+3
+Low
+accessibility
+react
++
+Open
+Enes Öztürk
+Enes Öztürk
+L231
+5min effort
+13 days ago
+Code Smell
+Minor
+
+
+Media elements such as <audio> and <video> must have a <track> for captions.
+
+Consistency
+Reliability
+
+
+3
+Low
+accessibility
+react
++
+Open
+Enes Öztürk
+Enes Öztürk
+L292
+5min effort
+13 days ago
+Code Smell
+Minor
+frontend/app/page.tsx
+
+
+A form label must be associated with a control.
+
+Intentionality
+Reliability
+
+
+2
+Medium
+accessibility
+react
++
+Open
+Enes Öztürk
+Enes Öztürk
+L120
+5min effort
+13 days ago
+Code Smell
+Major
+
+
+A form label must be associated with a control.
+
+Intentionality
+Reliability
+
+
+2
+Medium
+accessibility
+react
++
+Open
+Enes Öztürk
+Enes Öztürk
+L154
+5min effort
+13 days ago
+Code Smell
+Major
+frontend/components/ui/label.tsx
+
+
+A form label must be associated with a control.
+
+Intentionality
+Reliability
+
+
+2
+Medium
+accessibility
+react
++
+Open
+Not assigned
+L9
+5min effort
+1 month ago
+Code Smell
+Major
+
+
+
+
+
+
+-----------------------------------------------------
+
+backend/app/routers/jobs.py
+
+
+Document this HTTPException with status code 404 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L70
+5min effort
+1 month ago
+Code Smell
+Major
+
+
+Define a constant instead of duplicating this literal "/app/outputs" 3 times.
+
+Adaptability
+Maintainability
+
+
+4
+High
+design
++
+Open
+Enes Öztürk
+Enes Öztürk
+L135
+6min effort
+1 month ago
+Code Smell
+Critical
+
+
+Document this HTTPException with status code 404 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L139
+5min effort
+1 month ago
+Code Smell
+Major
+
+
+Define a constant instead of duplicating this literal "audio.mp3" 3 times.
+
+Adaptability
+Maintainability
+
+
+4
+High
+design
++
+Open
+Enes Öztürk
+Enes Öztürk
+L143
+6min effort
+1 month ago
+Code Smell
+Critical
+
+
+Define a constant instead of duplicating this literal "video.mp4" 3 times.
+
+Adaptability
+Maintainability
+
+
+4
+High
+design
++
+Open
+Enes Öztürk
+Enes Öztürk
+L158
+6min effort
+13 days ago
+Code Smell
+Critical
+
+
+Document this HTTPException with status code 404 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L174
+5min effort
+1 month ago
+Code Smell
+Major
+
+
+Document this HTTPException with status code 404 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L180
+5min effort
+13 days ago
+Code Smell
+Major
+
+
+Document this HTTPException with status code 400 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L183
+5min effort
+1 month ago
+Code Smell
+Major
+
+
+Document this HTTPException with status code 404 in the "responses" parameter.
+
+Intentionality
+Maintainability
+
+
+4
+High
+documentation
+fastapi
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L194
+5min effort
+1 month ago
+Code Smell
+Major
+backend/app/services/llm.py
+
+
+Remove duplicates in this character class.
+
+Intentionality
+Maintainability
+
+
+2
+Medium
+regex
++
+Open
+Enes Öztürk
+Enes Öztürk
+L49
+5min effort
+13 days ago
+Code Smell
+Major
+backend/app/services/video.py
+
+
+Refactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.
+
+Adaptability
+Maintainability
+
+
+4
+High
+brain-overload
++
+Open
+Enes Öztürk
+Enes Öztürk
+L27
+12min effort
+8 days ago
+Code Smell
+Critical
+frontend/app/jobs/[id]/page.tsx
+
+
+Remove this useless assignment to variable "isPending".
+
+Intentionality
+Maintainability
+
+
+2
+Medium
+cwe
+unused
++
+Open
+Enes Öztürk
+Enes Öztürk
+L131
+1min effort
+13 days ago
+Code Smell
+Major
+
+
+Extract this nested ternary operation into an independent statement.
+
+Intentionality
+Maintainability
+
+
+2
+Medium
+confusing
++
+Open
+Enes Öztürk
+Enes Öztürk
+L144
+5min effort
+13 days ago
+Code Smell
+Major
+
+
+Extract this nested ternary operation into an independent statement.
+
+Intentionality
+Maintainability
+
+
+2
+Medium
+confusing
++
+Open
+Enes Öztürk
+Enes Öztürk
+L153
+5min effort
+13 days ago
+Code Smell
+Major
+
+
+Do not use Array index in keys
+
+Intentionality
+Maintainability
+
+
+2
+Medium
+jsx
+performance
+...
++
+Open
+Enes Öztürk
+Enes Öztürk
+L327
+5min effort
+13 days ago
+Code Smell
+Major
+
+
+Mark the props of the component as read-only.
+
+Consistency
+Maintainability
+
+
+3
+Low
+react
+type-dependent
++
+Open
+Enes Öztürk
+Enes Öztürk
+L396
+5min effort
+13 days ago
+Code Smell
+Minor
+
+
+Mark the props of the component as read-only.
+
+Consistency
+Maintainability
+
+
+3
+Low
+react
+type-dependent
++
+Open
+Enes Öztürk
+Enes Öztürk
+L409
+5min effort
+13 days ago
+Code Smell
+Minor
+frontend/app/jobs/page.tsx
+
+
+Remove this unused import of 'CardHeader'.
+
+Intentionality
+Maintainability
+
+
+3
+Low
+es2015
+type-dependent
+...
++
+Open
+Not assigned
+L5
+1min effort
+1 month ago
+Code Smell
+Minor
+
+
+Remove this unused import of 'CardTitle'.
+
+Intentionality
+Maintainability
+
+
+3
+Low
+es2015
+type-dependent
+...
++
+Open
+Not assigned
+L5
+1min effort
+1 month ago
+Code Smell
+Minor
+frontend/app/layout.tsx
+
+
+Mark the props of the component as read-only.
+
+Consistency
+Maintainability
+
+
+3
+Low
+react
+type-dependent
++
+Open
+Enes Öztürk
+Enes Öztürk
+L10
+5min effort
+13 days ago
+Code Smell
+Minor
+frontend/app/providers.tsx
+
+
+Mark the props of the component as read-only.
+
+Consistency
+Maintainability
+
+
+3
+Low
+react
+type-dependent
++
+Open
+Enes Öztürk
+Enes Öztürk
+L5
+5min effort
+13 days ago
+Code Smell
+Minor
+frontend/components/TopicForm.tsx
+
+
+Handle this exception or don't catch it at all.
+
+Intentionality
+Maintainability
+
+
+3
+Low
+cwe
+error-handling
+...
++
+Open
+Not assigned

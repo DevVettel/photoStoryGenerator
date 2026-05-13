@@ -6,9 +6,34 @@ from app.workers.tasks import start_pipeline
 import uuid
 import asyncio
 import json
+import os
+import re
 
 router = APIRouter()
 init_db()
+
+AUDIO_FILE = "audio.mp3"
+VIDEO_FILE = "video.mp4"
+
+_UUID_RE = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+)
+_SAFE_FILENAME_RE = re.compile(r'^[a-zA-Z0-9_\-]+\.[a-zA-Z0-9]+$')
+
+
+def _get_output_dir() -> str:
+    return os.getenv("OUTPUT_DIR", "/app/outputs")
+
+
+def _safe_job_dir(job_id: str) -> str:
+    if not _UUID_RE.match(job_id):
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+    output_dir = _get_output_dir()
+    resolved_base = os.path.realpath(output_dir)
+    job_dir = os.path.realpath(os.path.join(output_dir, job_id))
+    if not job_dir.startswith(resolved_base + os.sep):
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+    return job_dir
 
 
 class JobCreate(BaseModel):
@@ -61,7 +86,11 @@ def create_job(payload: JobCreate):
         db.close()
 
 
-@router.get("/jobs/{job_id}", response_model=JobResponse)
+@router.get(
+    "/jobs/{job_id}",
+    response_model=JobResponse,
+    responses={404: {"description": "Job not found"}},
+)
 def get_job(job_id: str):
     db = SessionLocal()
     try:
@@ -79,6 +108,7 @@ def get_job(job_id: str):
         )
     finally:
         db.close()
+
 
 @router.get("/jobs", response_model=list[JobResponse])
 def list_jobs():
@@ -129,18 +159,19 @@ async def stream_job(job_id: str):
     )
 
 
-@router.get("/jobs/{job_id}/files")
+@router.get(
+    "/jobs/{job_id}/files",
+    responses={404: {"description": "Job files not found"}},
+)
 def get_job_files(job_id: str):
-    import os
-    OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/outputs")
-    job_dir = os.path.join(OUTPUT_DIR, job_id)
+    job_dir = _safe_job_dir(job_id)
 
     if not os.path.exists(job_dir):
         raise HTTPException(status_code=404, detail="Job files not found")
 
     files = {}
 
-    audio_path = os.path.join(job_dir, "audio.mp3")
+    audio_path = os.path.join(job_dir, AUDIO_FILE)
     if os.path.exists(audio_path):
         files["audio"] = f"/api/jobs/{job_id}/download/audio"
 
@@ -155,41 +186,61 @@ def get_job_files(job_id: str):
             for f in image_files
         ]
 
-    video_path = os.path.join(job_dir, "video.mp4")
+    video_path = os.path.join(job_dir, VIDEO_FILE)
     if os.path.exists(video_path):
         files["video"] = f"/api/jobs/{job_id}/download/video"
 
     return files
 
 
-@router.get("/jobs/{job_id}/download/{file_type}")
+@router.get(
+    "/jobs/{job_id}/download/{file_type}",
+    responses={
+        404: {"description": "File not found"},
+        400: {"description": "Invalid file type"},
+    },
+)
 def download_file(job_id: str, file_type: str):
     from fastapi.responses import FileResponse
-    import os
-    OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/outputs")
+
+    job_dir = _safe_job_dir(job_id)
 
     if file_type == "audio":
-        path = os.path.join(OUTPUT_DIR, job_id, "audio.mp3")
+        path = os.path.join(job_dir, AUDIO_FILE)
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Audio not found")
-        return FileResponse(path, media_type="audio/mpeg", filename="audio.mp3")
+        return FileResponse(path, media_type="audio/mpeg", filename=AUDIO_FILE)
 
     if file_type == "video":
-        path = os.path.join(OUTPUT_DIR, job_id, "video.mp4")
+        path = os.path.join(job_dir, VIDEO_FILE)
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Video not found")
-        return FileResponse(path, media_type="video/mp4", filename="video.mp4")
+        return FileResponse(path, media_type="video/mp4", filename=VIDEO_FILE)
 
     raise HTTPException(status_code=400, detail="Invalid file type")
 
 
-@router.get("/jobs/{job_id}/download/images/{filename}")
+@router.get(
+    "/jobs/{job_id}/download/images/{filename}",
+    responses={
+        404: {"description": "Image not found"},
+        400: {"description": "Invalid request"},
+    },
+)
 def download_image(job_id: str, filename: str):
     from fastapi.responses import FileResponse
-    import os
-    OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/outputs")
 
-    path = os.path.join(OUTPUT_DIR, job_id, "images", filename)
+    job_dir = _safe_job_dir(job_id)
+
+    if not _SAFE_FILENAME_RE.match(filename):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    images_dir = os.path.join(job_dir, "images")
+    resolved_images = os.path.realpath(images_dir)
+    path = os.path.realpath(os.path.join(images_dir, filename))
+    if not path.startswith(resolved_images + os.sep):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Image not found")
     return FileResponse(path, media_type="image/png", filename=filename)

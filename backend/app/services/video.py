@@ -24,56 +24,54 @@ def _format_srt_time(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
+def _split_sentence_at_midpoint(sentence: str) -> list[str]:
+    mid = len(sentence) // 2
+    split_pos = sentence.rfind(' ', 0, mid)
+    if split_pos == -1:
+        split_pos = mid
+    return [sentence[:split_pos].strip(), sentence[split_pos:].strip()]
+
+
+def _write_srt_entry(f, index: int, start: float, end: float, text: str, total_duration: float) -> None:
+    end = min(end, total_duration)
+    f.write(f"{index}\n")
+    f.write(f"{_format_srt_time(start)} --> {_format_srt_time(end)}\n")
+    f.write(f"{text}\n\n")
+
+
+def _write_simple_srt(srt_path: str, image_count: int, duration_per_image: float) -> None:
+    with open(srt_path, "w", encoding="utf-8") as f:
+        for i in range(image_count):
+            start = i * duration_per_image
+            end = (i + 1) * duration_per_image
+            f.write(f"{i + 1}\n")
+            f.write(f"{_format_srt_time(start)} --> {_format_srt_time(end)}\n")
+            f.write(f"Bölüm {i + 1}\n\n")
+
+
 def _generate_srt(srt_path: str, image_count: int, duration_per_image: float, story_text: str = "") -> None:
     if not story_text:
-        segments = [
-            {"index": i+1, "start": i*duration_per_image, "end": (i+1)*duration_per_image, "text": f"Bölüm {i+1}"}
-            for i in range(image_count)
-        ]
-        with open(srt_path, "w", encoding="utf-8") as f:
-            for seg in segments:
-                f.write(f"{seg['index']}\n")
-                f.write(f"{_format_srt_time(seg['start'])} --> {_format_srt_time(seg['end'])}\n")
-                f.write(f"{seg['text']}\n\n")
+        _write_simple_srt(srt_path, image_count, duration_per_image)
         return
 
-    # Cümleleri böl
     sentences = [s.strip() + '.' for s in story_text.replace('\n', ' ').split('.') if len(s.strip()) > 5]
     total_duration = image_count * duration_per_image
-
-    # Her cümleye eşit süre ver
-    duration_per_sentence = total_duration / len(sentences)
-    # Minimum 1.5s, maksimum görsel süresi kadar
-    duration_per_sentence = max(1.5, min(duration_per_sentence, duration_per_image))
+    duration_per_sentence = max(1.5, min(total_duration / len(sentences), duration_per_image))
 
     with open(srt_path, "w", encoding="utf-8") as f:
         current_time = 0.0
-        for i, sentence in enumerate(sentences):
-            # Cümle çok uzunsa ikiye böl
+        entry_index = 1
+        for sentence in sentences:
             if len(sentence) > 80:
-                mid = len(sentence) // 2
-                # En yakın boşlukta böl
-                split_pos = sentence.rfind(' ', 0, mid)
-                if split_pos == -1:
-                    split_pos = mid
-                parts = [sentence[:split_pos].strip(), sentence[split_pos:].strip()]
+                parts = _split_sentence_at_midpoint(sentence)
                 part_dur = duration_per_sentence / 2
                 for j, part in enumerate(parts):
                     start = current_time + j * part_dur
-                    end = start + part_dur
-                    if end > total_duration:
-                        end = total_duration
-                    f.write(f"{i*2+j+1}\n")
-                    f.write(f"{_format_srt_time(start)} --> {_format_srt_time(end)}\n")
-                    f.write(f"{part}\n\n")
+                    _write_srt_entry(f, entry_index, start, start + part_dur, part, total_duration)
+                    entry_index += 1
             else:
-                end = current_time + duration_per_sentence
-                if end > total_duration:
-                    end = total_duration
-                f.write(f"{i+1}\n")
-                f.write(f"{_format_srt_time(current_time)} --> {_format_srt_time(end)}\n")
-                f.write(f"{sentence}\n\n")
-
+                _write_srt_entry(f, entry_index, current_time, current_time + duration_per_sentence, sentence, total_duration)
+                entry_index += 1
             current_time += duration_per_sentence
             if current_time >= total_duration:
                 break
@@ -91,14 +89,11 @@ def assemble_video(
     fps = 25
     xfade_duration = 1.0
 
-    # SRT oluştur
     srt_path = output_path.replace(".mp4", ".srt")
     _generate_srt(srt_path, image_count, duration_per_image, story_text)
 
-    # Her görsel için gerçek süre (xfade overlap dahil)
     segment_duration = duration_per_image + xfade_duration
 
-    # Ken Burns efektleri — tam segment süresini kapsar
     def kb_zoom_in(d, f):
         n = int(d * f)
         return f"zoompan=z='min(1+on/{n}*0.08\\,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s=1280x720:fps={f}"
@@ -120,19 +115,14 @@ def assemble_video(
         return f"zoompan=z=1.06:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)+on/{n}*30':d={n}:s=1280x720:fps={f}"
 
     kb_effects = [kb_zoom_in, kb_zoom_out, kb_pan_right, kb_pan_left, kb_pan_up]
-
-    # xfade geçiş tipleri
     xfade_types = ["dissolve", "fadeblack", "smoothleft", "smoothright", "fade"]
 
-    # Input argümanları
     input_args = []
     for img in image_paths:
         input_args += ["-loop", "1", "-t", str(segment_duration), "-i", img]
 
-    # Filter complex
     filter_parts = []
 
-    # Adım 1: scale → Ken Burns
     for i in range(image_count):
         effect_fn = kb_effects[i % len(kb_effects)]
         kb = effect_fn(segment_duration, fps)
@@ -142,7 +132,6 @@ def assemble_video(
             f"{kb}[kb{i}]"
         )
 
-    # Adım 2: xfade geçişleri
     if image_count == 1:
         last_label = "kb0"
     else:
@@ -158,7 +147,6 @@ def assemble_video(
             prev_label = out_label
         last_label = "xflast"
 
-    # Adım 3: Altyazı
     filter_parts.append(
         f"[{last_label}]subtitles={srt_path}:force_style='FontSize=20\\,PrimaryColour=&Hffffff\\,OutlineColour=&H000000\\,Outline=2\\,Alignment=2\\,Bold=1'[outv]"
     )

@@ -128,7 +128,8 @@ export default function JobDetailPage() {
               {STEPS.map((step, i) => {
                 const isDone = currentStepIndex > i || isCompleted;
                 const isActive = job?.current_step === step.key;
-                const isPending = !isDone && !isActive;
+                const circleBackground = isDone ? "var(--success)" : isActive ? "var(--accent)" : "var(--bg-secondary)";
+                const labelColor = isActive ? "var(--text-primary)" : isDone ? "var(--text-secondary)" : "var(--text-muted)";
                 return (
                   <div key={step.key}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: isActive ? "10px" : "0" }}>
@@ -141,7 +142,7 @@ export default function JobDetailPage() {
                         justifyContent: "center",
                         fontSize: "11px",
                         fontWeight: "600",
-                        background: isDone ? "var(--success)" : isActive ? "var(--accent)" : "var(--bg-secondary)",
+                        background: circleBackground,
                         color: isDone || isActive ? "#000" : "var(--text-muted)",
                         border: isActive ? "none" : "1px solid var(--border)",
                         flexShrink: 0,
@@ -150,7 +151,7 @@ export default function JobDetailPage() {
                       </div>
                       <span style={{
                         fontSize: "14px",
-                        color: isActive ? "var(--text-primary)" : isDone ? "var(--text-secondary)" : "var(--text-muted)",
+                        color: labelColor,
                         fontWeight: isActive ? "500" : "400",
                         flex: 1,
                       }}>{step.label}</span>
@@ -233,7 +234,9 @@ export default function JobDetailPage() {
                 preload="metadata"
                 style={{ width: "100%", display: "block" }}
                 src={`${API_URL}${files.video}`}
-              />
+              >
+                <track kind="captions" />
+              </video>
               <div style={{ padding: "1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "10px", justifyContent: "space-between" }}>
                 <a
                   href={`${API_URL}${files.video}`}
@@ -294,7 +297,9 @@ export default function JobDetailPage() {
                 preload="metadata"
                 style={{ width: "100%" }}
                 src={`${API_URL}${files.audio}`}
-              />
+              >
+                <track kind="captions" />
+              </audio>
             </div>
           </div>
         )}
@@ -323,8 +328,8 @@ export default function JobDetailPage() {
           <div style={{ marginBottom: "1.5rem" }}>
             <SectionLabel>Görseller</SectionLabel>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-              {files.images.map((imgUrl: string, i: number) => (
-                <a key={i} href={`${API_URL}${imgUrl}`} target="_blank" rel="noopener noreferrer">
+              {files.images.map((imgUrl: string) => (
+                <a key={imgUrl} href={`${API_URL}${imgUrl}`} target="_blank" rel="noopener noreferrer">
                   <img
                     src={`${API_URL}${imgUrl}`}
                     alt={`Görsel ${i + 1}`}
@@ -393,7 +398,7 @@ const mainStyle: React.CSSProperties = {
   background: "var(--bg-primary)",
 };
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <p style={{
       fontSize: "11px",
@@ -406,7 +411,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const config: Record<string, { bg: string; color: string; label: string }> = {
     pending: { bg: "rgba(136,136,160,0.15)", color: "#8888a0", label: "Bekliyor" },
     running: { bg: "rgba(245,158,11,0.15)", color: "#f59e0b", label: "İşleniyor" },

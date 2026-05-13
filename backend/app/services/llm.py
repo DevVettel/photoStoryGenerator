@@ -46,7 +46,7 @@ def generate_story(topic: str, language: str = "tr") -> str:
         content = response.choices[0].message.content
 
         # Yabancı karakterleri temizle — sadece Latin, Türkçe, noktalama ve boşluk bırak
-        content = re.sub(r'[^\x00-\x7FÀ-ɏĞğİıŞşÖöÜüÇç\s]', '', content)
+        content = re.sub(r'[^\x00-\x7FÀ-ɏ\s]', '', content)
         content = re.sub(r' +', ' ', content).strip()
 
         return content

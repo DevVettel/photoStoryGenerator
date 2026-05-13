@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Turn any topic into a cinematic YouTube video with AI",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="tr">
       <body>
